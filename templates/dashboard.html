@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="white-blue">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='BabcockLogo/BU_logo.png') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - UMIS Chatbot</title>
+  <!-- Include Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <style>
+    /* CSS Variables for White-Blue Theme */
+    :root {
+      --bg-color: #EBEDEF;         /* Page background */
+      --menu-bg: #FFFFFF;          /* White menu background (Secondary) */
+      --card-bg: #FFFFFF;          /* White card background (Secondary) */
+      --accent: #004282;           /* Blue accent (Primary) */
+      --text-color: #004282;       /* Blue primary text (Primary) */
+      --text-muted: rgba(0, 66, 130, 0.7); /* Muted blue */
+      --danger: #004282;           /* Blue used for danger elements (Primary) */
+      --transition: 0.3s ease;
+      --shadow: 0 4px 12px rgba(0, 66, 130, 0.15);
+    }
+
+    /* Global Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: var(--bg-color);
+      font-family: 'Segoe UI', sans-serif;
+      color: var(--text-color);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Side Menu (Always visible on desktop; toggled on mobile) */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background: var(--menu-bg);
+      padding: 1rem;
+      transition: transform var(--transition);
+      z-index: 1000;
+    }
+    @media (max-width: 767px) {
+      .side-menu {
+        transform: translateX(-100%);
+      }
+      .side-menu.active {
+        transform: translateX(0);
+      }
+    }
+
+    /* Logo on Top of Side Menu */
+    .side-menu-logo {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .side-menu-logo img {
+      width: 120px;
+      height: auto;
+    }
+
+    /* Side Menu Navigation */
+    .side-menu ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 2rem;
+    }
+    .side-menu ul li {
+      margin: 1rem 0;
+    }
+    .side-menu ul li a {
+      display: block;
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      color: var(--text-color);
+      border-radius: 0.5rem;
+      transition: background var(--transition);
+      text-align: center;
+    }
+    .side-menu ul li a:hover {
+      background: var(--accent);
+      color: var(--menu-bg);
+    }
+
+    /* Logout Button at Bottom of Side Menu */
+    .logout-btn {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      background: var(--danger);
+      color: var(--menu-bg);
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .logout-btn:hover {
+      background: var(--menu-bg);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    /* Close Button for Mobile Side Menu */
+    .side-menu .close-btn {
+      display: none;
+    }
+    @media (max-width: 767px) {
+      .side-menu .close-btn {
+        display: block;
+        text-align: right;
+        font-size: 1.8rem;
+        color: var(--text-color);
+        cursor: pointer;
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding-left: 1rem;
+    }
+    .dashboard-header h1 {
+      font-size: 2rem;
+      margin: 0;
+    }
+
+    /* Hamburger Menu Icon */
+    .hamburger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background: var(--accent);
+      transition: transform var(--transition);
+    }
+
+    /* Main Content */
+    .dashboard-content {
+      flex: 1;
+      margin-left: 250px;
+      padding: 2rem;
+      width: calc(100% - 250px);
+      transition: margin-left var(--transition);
+    }
+    @media (max-width: 767px) {
+      .dashboard-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+      }
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .stat-card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+    .stat-card button.icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 2rem;
+      color: var(--accent);
+      transition: color var(--transition);
+    }
+    .stat-card button.icon-btn:hover {
+      color: var(--text-color);
+    }
+
+    /* FAQ Management Section (Hidden on Mobile) */
+    .faq-list {
+      background: var(--card-bg);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    @media (max-width: 767px) {
+      .faq-list {
+        display: none;
+      }
+    }
+    .faq-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .faq-header h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      flex: 1;              /* Allow the heading to take available space */
+      margin-right: 1rem;   /* Add space between the heading and the button */
+    }
+    .faq-header .btn {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 0.5rem;
+      color: var(--menu-bg);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .faq-header .btn:hover {
+      background: var(--menu-bg);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .faq-item {
+      background: var(--card-bg);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-item h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+    .faq-item h3 small {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .faq-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: filter var(--transition);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--menu-bg);
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: var(--menu-bg);
+    }
+    .btn:hover {
+      filter: brightness(0.9);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 66, 130, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: var(--shadow);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .modal-header h3 {
+      font-size: 1.4rem;
+      color: var(--accent);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-color);
+      cursor: pointer;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--card-bg);
+      border: 1px solid var(--text-muted);
+      border-radius: 0.25rem;
+      color: var(--text-color);
+    }
+
+    /* Modal for Selecting FAQ (for Edit/Delete via side menu) */
+    .select-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 66, 130, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2100;
+    }
+    .select-modal-overlay.active {
+      display: flex;
+    }
+    .select-modal {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: var(--shadow);
+    }
+    .select-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .select-modal-header h3 {
+      font-size: 1.4rem;
+      color: var(--accent);
+    }
+    .select-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-color);
+      cursor: pointer;
+    }
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--card-bg);
+      border: 1px solid var(--text-muted);
+      border-radius: 0.25rem;
+      color: var(--text-color);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 767px) {
+      .dashboard-content {
+        margin-left: 0;
+        padding: 1rem;
+        width: 100%;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Side Menu (Always visible on desktop, toggled on mobile) -->
+  <nav class="side-menu" id="side-menu" aria-label="Side Menu">
+    <div class="side-menu-logo">
+      <img src="{{ url_for('static', filename='BabcockLogo/BU_logo.png') }}" alt="University Logo" />
+    </div>
+    <span class="close-btn" id="close-menu">&times;</span>
+    <ul>
+      <li><a href="#" id="menu-edit">Edit FAQ</a></li>
+      <li><a href="#" id="menu-delete">Delete FAQ</a></li>
+      <li><a href="#" id="menu-create">Create FAQ</a></li>
+    </ul>
+    <button class="logout-btn" id="logout-btn" onclick="location.href='{{ url_for('auth.logout') }}'">Logout</button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="dashboard-content" id="main-content">
+    <header class="dashboard-header">
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <h1>Welcome, Admin!</h1>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="stats-grid" aria-labelledby="stats-heading">
+      <article class="stat-card">
+        <h3>Edit FAQ</h3>
+        <button id="icon-edit" class="icon-btn" aria-label="Edit FAQ">
+          <i class="fas fa-edit"></i>
+        </button>
+      </article>
+      <article class="stat-card">
+        <h3>Delete FAQ</h3>
+        <button id="icon-delete" class="icon-btn" aria-label="Delete FAQ">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </article>
+      <article class="stat-card">
+        <h3>New FAQs</h3>
+        <button id="icon-create" class="icon-btn" aria-label="Add FAQ">
+          <i class="fas fa-plus-circle"></i>
+        </button>
+      </article>
+    </section>
+
+    <!-- FAQ Management Section (Hidden on Mobile) -->
+    <section class="faq-list" aria-labelledby="faq-heading">
+      <header class="faq-header">
+        <h2 id="faq-heading">FAQ Management</h2>
+        <button class="btn btn-primary" id="add-faq-btn">Add FAQ</button>
+      </header>
+      <div id="faq-items" class="faq-items"></div>
+    </section>
+  </main>
+
+  <!-- Modal for Adding/Editing FAQ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <header class="modal-header">
+        <h3>Add New FAQ</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </header>
+      <form id="faq-form">
+        <div class="form-group">
+          <label for="faq-question">Question</label>
+          <input type="text" id="faq-question" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label for="faq-answer">Answer</label>
+          <textarea id="faq-answer" class="form-input" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save FAQ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Selecting FAQ (for Edit/Delete via side menu) -->
+  <div class="select-modal-overlay" id="select-faq-modal">
+    <div class="select-modal">
+      <header class="select-modal-header">
+        <h3>Select FAQ</h3>
+        <button class="select-modal-close" id="select-modal-close">&times;</button>
+      </header>
+      <div class="form-group">
+        <label for="select-faq">Choose an FAQ:</label>
+        <select id="select-faq"></select>
+      </div>
+      <div style="display: flex; justify-content: space-between; gap: 1rem;">
+        <button class="btn btn-primary" id="select-edit-btn">Edit</button>
+        <button class="btn btn-danger" id="select-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class Dashboard {
+      constructor() {
+        this.editingFAQId = null; // Tracks if we're editing an FAQ
+        this.faqData = [];         // Stores loaded FAQ data
+        this.initElements();
+        this.initEventListeners();
+        this.initIconListeners();
+        this.loadData();
+      }
+
+      initElements() {
+        this.elements = {
+          sideMenu: document.getElementById('side-menu'),
+          closeMenu: document.getElementById('close-menu'),
+          hamburger: document.getElementById('hamburger'),
+          mainContent: document.getElementById('main-content'),
+          faqItems: document.getElementById('faq-items'),
+          modalOverlay: document.getElementById('modal-overlay'),
+          faqForm: document.getElementById('faq-form'),
+          selectFaqModal: document.getElementById('select-faq-modal'),
+          selectFaq: document.getElementById('select-faq')
+        };
+      }
+
+      initEventListeners() {
+        // Toggle side menu on mobile
+        this.elements.hamburger.addEventListener('click', () => this.toggleSideMenu());
+        this.elements.closeMenu.addEventListener('click', () => this.toggleSideMenu());
+
+        // Side menu options
+        document.getElementById('menu-create').addEventListener('click', () => {
+          this.editingFAQId = null;
+          document.querySelector('.modal-header h3').textContent = "Add New FAQ";
+          document.getElementById('faq-question').value = "";
+          document.getElementById('faq-answer').value = "";
+          this.toggleSideMenu();
+          this.toggleModal();
+        });
+        document.getElementById('menu-edit').addEventListener('click', async () => {
+          await this.openSelectFaqModal("edit");
+          this.toggleSideMenu();
+        });
+        document.getElementById('menu-delete').addEventListener('click', async () => {
+          await this.openSelectFaqModal("delete");
+          this.toggleSideMenu();
+        });
+
+        // Toggle modal for adding/editing FAQ via add FAQ button
+        document.getElementById('add-faq-btn').addEventListener('click', () => {
+          this.editingFAQId = null;
+          document.querySelector('.modal-header h3').textContent = "Add New FAQ";
+          document.getElementById('faq-question').value = "";
+          document.getElementById('faq-answer').value = "";
+          this.toggleModal();
+        });
+        document.getElementById('modal-close').addEventListener('click', () => this.toggleModal());
+        this.elements.modalOverlay.addEventListener('click', (e) => {
+          if (e.target === this.elements.modalOverlay) this.toggleModal();
+        });
+        this.elements.faqForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+
+        // Event listeners for select FAQ modal (for edit/delete via side menu)
+        document.getElementById('select-edit-btn').addEventListener('click', () => {
+          const faqId = this.elements.selectFaq.value;
+          if (faqId) {
+            this.editFAQById(faqId);
+            this.closeSelectFaqModal();
+          }
+        });
+        document.getElementById('select-delete-btn').addEventListener('click', () => {
+          const faqId = this.elements.selectFaq.value;
+          if (faqId && confirm("Are you sure you want to delete this FAQ?")) {
+            this.deleteFAQById(faqId);
+            this.closeSelectFaqModal();
+          }
+        });
+        document.getElementById('select-modal-close').addEventListener('click', () => {
+          this.closeSelectFaqModal();
+        });
+      }
+
+      initIconListeners() {
+        // Icon listeners for both desktop and mobile (the same button is shown on all viewports)
+        const iconEdit = document.getElementById('icon-edit');
+        const iconDelete = document.getElementById('icon-delete');
+        const iconCreate = document.getElementById('icon-create');
+
+        if (iconEdit) {
+          iconEdit.addEventListener('click', async () => {
+            await this.openSelectFaqModal("edit");
+          });
+        }
+        if (iconDelete) {
+          iconDelete.addEventListener('click', async () => {
+            await this.openSelectFaqModal("delete");
+          });
+        }
+        if (iconCreate) {
+          iconCreate.addEventListener('click', () => {
+            this.editingFAQId = null;
+            document.querySelector('.modal-header h3').textContent = "Add New FAQ";
+            document.getElementById('faq-question').value = "";
+            document.getElementById('faq-answer').value = "";
+            this.toggleModal();
+          });
+        }
+      }
+
+      toggleSideMenu() {
+        this.elements.sideMenu.classList.toggle('active');
+      }
+
+      toggleModal() {
+        this.elements.modalOverlay.classList.toggle('active');
+      }
+
+      async openSelectFaqModal(mode) {
+        // Ensure faqData is loaded
+        if (!this.faqData || this.faqData.length === 0) {
+          await this.loadData();
+        }
+        let optionsHTML = `<option value="">Select an FAQ</option>`;
+        this.faqData.forEach(faq => {
+          optionsHTML += `<option value="${faq.id}">${faq.question} (ID: ${faq.id})</option>`;
+        });
+        this.elements.selectFaq.innerHTML = optionsHTML;
+        this.elements.selectFaqModal.style.display = "flex";
+      }
+
+      closeSelectFaqModal() {
+        this.elements.selectFaqModal.style.display = "none";
+      }
+
+      async loadData() {
+        try {
+          const [stats, faqs] = await Promise.all([
+            this.fetchStats(),
+            this.fetchFAQs()
+          ]);
+          // Remove updating of stats counts (so no "0" appears)
+          // this.updateStats(stats);
+          this.faqData = faqs;
+          this.renderFAQs(faqs);
+        } catch (error) {
+          console.error('Error loading data:', error);
+        }
+      }
+
+      async fetchStats() {
+        // Dummy data; not used since we remove counts
+        return {
+          totalChats: 0,
+          activeUsers: 0,
+          newFaqs: 0
+        };
+      }
+
+      async fetchFAQs() {
+        // Updated endpoint to use the admin JSON endpoint for FAQs
+        const response = await fetch('/admin/api/faqs');
+        return response.json();
+      }
+
+      updateStats(stats) {
+        // Intentionally left blank to remove "0" values
+      }
+
+      renderFAQs(faqs) {
+        this.elements.faqItems.innerHTML = faqs.map(faq => `
+          <article class="faq-item" data-id="${faq.id}">
+            <div>
+              <h3>
+                ${faq.question}
+                <small>(ID: ${faq.id})</small>
+              </h3>
+              <p>${faq.answer}</p>
+            </div>
+            <div class="faq-actions">
+              <button class="btn btn-primary btn-edit">Edit</button>
+              <button class="btn btn-danger btn-delete">Delete</button>
+            </div>
+          </article>
+        `).join('');
+
+        // Attach inline event listeners for Delete buttons
+        const deleteButtons = document.querySelectorAll('.btn-delete');
+        deleteButtons.forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const faqItem = e.target.closest('.faq-item');
+            const faqId = faqItem.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this FAQ?')) {
+              try {
+                const response = await fetch(`/admin/api/faqs/${faqId}`, { method: 'DELETE' });
+                const result = await response.json();
+                console.log('Delete response:', result);
+                alert(result.message);
+                this.loadData();
+              } catch (error) {
+                console.error('Error deleting FAQ:', error);
+              }
+            }
+          });
+        });
+
+        // Attach inline event listeners for Edit buttons
+        const editButtons = document.querySelectorAll('.btn-edit');
+        editButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            const faqItem = e.target.closest('.faq-item');
+            const faqId = faqItem.getAttribute('data-id');
+            this.editFAQById(faqId);
+          });
+        });
+      }
+
+      editFAQById(faqId) {
+        const faq = this.faqData.find(f => f.id == faqId);
+        if (!faq) {
+          alert("FAQ not found.");
+          return;
+        }
+        this.editingFAQId = faqId;
+        document.getElementById('faq-question').value = faq.question;
+        document.getElementById('faq-answer').value = faq.answer;
+        document.querySelector('.modal-header h3').textContent = "Edit FAQ";
+        this.toggleModal();
+      }
+
+      deleteFAQById(faqId) {
+        if (confirm("Are you sure you want to delete FAQ with ID " + faqId + "?")) {
+          fetch(`/admin/api/faqs/${faqId}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+              alert(data.message);
+              this.loadData();
+            })
+            .catch(error => console.error('Error deleting FAQ:', error));
+        }
+      }
+
+      async handleFormSubmit(e) {
+        e.preventDefault();
+        const faqData = {
+          question: document.getElementById('faq-question').value,
+          answer: document.getElementById('faq-answer').value
+        };
+        try {
+          if (this.editingFAQId) {
+            console.log("Updating FAQ ID:", this.editingFAQId, "with data:", faqData);
+            const response = await fetch(`/admin/api/faqs/${this.editingFAQId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(faqData)
+            });
+            const result = await response.json();
+            console.log("Update response:", result);
+            this.editingFAQId = null;
+            document.querySelector('.modal-header h3').textContent = "Add New FAQ";
+          } else {
+            console.log("Creating new FAQ with data:", faqData);
+            const response = await fetch('/admin/api/faqs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(faqData)
+            });
+            const result = await response.json();
+            console.log("Create response:", result);
+          }
+          this.toggleModal();
+          this.loadData();
+        } catch (error) {
+          console.error('Error saving FAQ:', error);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => new Dashboard());
+  </script>
+</body>
+</html>

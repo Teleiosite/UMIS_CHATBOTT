@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='BabcockLogo/BU_logo.png') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UMIS Chatbot</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* CSS Variables for the new design */
+    :root {
+      --main-bg: #F0F2F5;           /* Overall page background (very light gray-blue) */
+      --sidebar-bg: #004282;        /* Sidebar background (rich blue) */
+      --sidebar-text: #FFFFFF;      /* Sidebar text (white) */
+      --chat-bg: #FFFFFF;           /* Chat container background (clean white) */
+      --chat-border: #E0E0E0;        /* Subtle border color */
+      --bot-message-bg: #E9EEF3;     /* Chatbot message background (soft blue-gray) */
+      --bot-message-text: #333333;   /* Chatbot message text (dark gray) */
+      --user-message-bg: #004282;    /* User message background (rich blue) */
+      --user-message-text: #FFFFFF;  /* User message text (white) */
+      --input-bg: #F8F9FA;           /* Input container background (very light gray) */
+      --input-border: #CCCCCC;       /* Input border color */
+      --button-bg: #004282;          /* Button background (rich blue) */
+      --button-text: #FFFFFF;        /* Button text (white) */
+      --button-hover-bg: #003366;     /* Button hover background (darker blue) */
+      --accent: #004282;             /* Accent color (matches primary blue) */
+    }
+
+    /* Base Reset and Typography */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--main-bg);
+      color: var(--bot-message-text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      width: 300px;
+      padding: 20px;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+    .sidebar .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .sidebar .logo {
+      width: 180px;
+      height: auto;
+    }
+    .sidebar h3 {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar ul li {
+      padding: 10px;
+      border-bottom: 1px solid var(--chat-border);
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+    .sidebar ul li:hover {
+      background: var(--chat-border);
+      color: var(--sidebar-bg);
+    }
+
+    /* Chat Container Styles */
+    .chat-container {
+      flex: 1;
+      background: var(--chat-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border-left: 1px solid var(--chat-border);
+    }
+    .close-btn {
+      display: none; /* Hidden by default (desktop view) */
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 30px;
+      background: transparent;
+      border: none;
+      color: var(--sidebar-text);
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      opacity: 0.7;
+    }
+
+    /* Chat Header with Hamburger */
+    .chat-header {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+    }
+    .hamburger {
+      font-size: 24px;
+      color: var(--sidebar-text);
+      cursor: pointer;
+      display: none;
+      margin-right: 15px;
+    }
+    .chat-header h2 {
+      font-size: 1.25rem;
+    }
+
+    /* Chat Messages Area */
+    .chat-messages {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    .message {
+      margin-bottom: 20px;
+      max-width: 70%;
+      animation: messageAppear 0.4s ease forwards;
+    }
+    @keyframes messageAppear {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .message-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--chat-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+    .message-content {
+      padding: 15px;
+      border-radius: 15px;
+      line-height: 1.5;
+      position: relative;
+    }
+    /* Chatbot (bot) messages */
+    .bot-message .message-content {
+      background: var(--bot-message-bg);
+      color: var(--bot-message-text);
+    }
+    /* User messages */
+    .user-message {
+      align-self: flex-end;
+    }
+    .user-message .message-content {
+      background: var(--user-message-bg);
+      color: var(--user-message-text);
+    }
+    .timestamp {
+      font-size: 0.75rem;
+      color: var(--input-border);
+      margin-top: 8px;
+      display: block;
+    }
+
+    /* Input Area */
+    .input-container {
+      padding: 10px 15px;
+      background: var(--input-bg);
+      display: flex;
+      gap: 8px;
+      position: relative;
+      border-top: 1px solid var(--chat-border);
+      align-items: center;
+    }
+    textarea {
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--bot-message-text);
+      resize: none;
+      overflow-y: hidden;
+      font-size: 1rem;
+      line-height: 1.5;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      max-height: 150px;
+      min-width: 0;
+      max-width: calc(95% - 60px);
+      overflow-wrap: break-word;
+    }
+    textarea::placeholder {
+      color: var(--input-border);
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+    textarea:focus {
+      border-color: var(--sidebar-bg);
+      box-shadow: 0 0 0 2px rgba(0, 66, 130, 0.2);
+      outline: none;
+    }
+    textarea:focus::placeholder {
+      opacity: 0.5;
+    }
+    button {
+      padding: 12px 20px;
+      height: 48px;
+      background: var(--button-bg);
+      border: none;
+      border-radius: 8px;
+      color: var(--button-text);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      min-width: 42px;
+    }
+    button:hover {
+      background: var(--button-hover-bg);
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    button i {
+      font-size: 1.2rem;
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 768px) {
+      .input-container {
+        padding: 10px 15px;
+      }
+      textarea {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+      button {
+        padding: 10px 15px;
+        height: 42px;
+      }
+      button i {
+        font-size: 1rem;
+      }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .hamburger {
+        display: block;
+      }
+      .message {
+        max-width: 85%;
+      }
+      /* Show the close button only on mobile */
+      .close-btn {
+        display: block;
+      }
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      position: absolute;
+      top: -35px;
+      left: 20px;
+      display: none;
+      gap: 8px;
+    }
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite;
+    }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar with Logo and FAQ List -->
+    <div class="sidebar">
+      <div class="logo-container">
+        <button class="close-btn">X</button>
+        <img src="{{ url_for('static', filename='BabcockLogo/BU_logo.png') }}" alt="University Logo" class="logo">
+      </div>
+      <h3>FAQs</h3>
+      <ul class="faq-list">
+        <!-- FAQ items will be populated by JavaScript -->
+      </ul>
+    </div>
+    <!-- Chat Container -->
+    <div class="chat-container">
+      <div class="chat-header">
+        <i class="fas fa-bars hamburger"></i>
+        <h2>UMIS Chatbot</h2>
+      </div>
+      <div class="chat-messages">
+        <!-- Chat messages (including welcome message) will appear here -->
+      </div>
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+      <div class="input-container">
+        <textarea id="user-input" placeholder="Type your message..." rows="1"></textarea>
+        <button id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ChatUI Script: Handles the chatbot UI logic -->
+  <script>
+    class ChatUI {
+      constructor() {
+        // Define the FAQ data (24 FAQs)
+        this.faqs = [
+          {
+            question: "Q1: How do I reset my UMIS portal password?",
+            answer: `A:
+- Open the UMIS portal.
+- Click on "Reset Password."
+- Enter your registered email.
+- Set your new password and confirm it.
+- Click "Reset."`
+          },
+          {
+            question: "Q2: How do I check my personal details on the UMIS portal?",
+            answer: `A:
+- Log in to the UMIS portal.
+- Navigate to the left-side navigation bar.
+- Click on "Personal Details."
+
+Click to access the Personal Details page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=112:0`
+          },
+          {
+            question: "Q3: How do I check my examination results?",
+            answer: `A:
+- Log in to the UMIS portal.
+- Click on "Academic Details" in the navigation bar.
+- Click on "Semester Results."
+
+Click to access the Semester Results page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=19:0
+- Select the semester you want to view.`
+          },
+          {
+            question: "Q4: How do I check my unofficial transcript?",
+            answer: `A:
+- Log in to the UMIS portal.
+- Click on "Academic Details."
+- Select "Unofficial Transcript."
+
+Click to access the Unofficial Transcript page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=21:0`
+          },
+          {
+            question: "Q5: How do I check my checklisting status?",
+            answer: `A:
+- Log in to the UMIS portal.
+- Click on "Academic Details."
+- Select "Check Listing."
+
+Click to access the Check Listing page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=26:0`
+          },
+          {
+            question: "Q6: How do I commence my course registration?",
+            answer: `A:
+- Log in to the UMIS portal.
+- Click on "Course Selection."
+- Select "Commence Registration."
+
+Click to access the Course Registration page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=22:0
+- Follow the prompts to select your courses.`
+          },
+          {
+            question: "Q7: What should I do if I encounter an error during course registration?",
+            answer: `A:
+- Contact your course advisor for assistance.`
+          },
+          {
+            question: "Q8: How do I add or drop a course after registration?",
+            answer: `A:
+**To add a course:**
+- Click on "Course Selection."
+- Select "Select Courses."
+
+Click to access the Select Courses page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=24:0
+- Scan for the course you want to add.
+- Click the checkbox beside the course and lecturer.
+
+**To drop a course:**
+- Go to "Selected Course List."
+
+Click to access the Selected Course List page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=27:0
+- Scroll to the bottom of the page.
+- Click the "Apply to Drop" button.`
+          },
+          {
+            question: "Q9: How do I check my outstanding courses?",
+            answer: `A:
+- Log in to UMIS.
+- Navigate to "Course Selection."
+- Click on "Outstanding Courses."
+
+Click to access the Outstanding Courses page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=103:0`
+          },
+          {
+            question: "Q10: How do I know if I have an outstanding course to retake?",
+            answer: `A:
+- Go to "Check Listing" under "Academic Details."
+- Look for courses marked as "NO."`
+          },
+          {
+            question: "Q11: How do I view my class timetable?",
+            answer: `A:
+- Log in to UMIS.
+- Click "Course Selection."
+- Select "Current Timetable."
+
+Click to access the Current Timetable page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=12:0`
+          },
+          {
+            question: "Q12: How do I check my selected timetable?",
+            answer: `A:
+- Log in to UMIS.
+- Click "Course Selection."
+- Select "Selected Timetable."
+
+Click to access the Selected Timetable page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=12:0`
+          },
+          {
+            question: "Q13: How do I check my registration status?",
+            answer: `A:
+- Click on "Finance."
+- Select "Check Registration Status."
+
+Click to access the Registration Status page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=30:0`
+          },
+          {
+            question: "Q14: Where can I check my GPA and CGPA?",
+            answer: `A:
+- Click on "Academic Details."
+- Select "Semester Results."
+- Your GPA for each semester and cumulative CGPA will be displayed.`
+          },
+          {
+            question: "Q15: How do I access my past academic results?",
+            answer: `A:
+- Click on "Academic Details."
+- Select "Semester Results."
+
+Click to access the Semester Results page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=19:0
+- Choose the semester result you want to view.`
+          },
+          {
+            question: "Q16: How do I check my finance statement?",
+            answer: `A:
+- Log in to UMIS.
+- Click on "Finance."
+- Select "Finance Statement."
+
+Click to access the Finance Statement page: https://umis.babcock.edu.ng/babcock/a_statement.jsp?view=33:0`
+          },
+          {
+            question: "Q17: How do I make online payments for tuition and other fees?",
+            answer: `A:
+- Complete your hall, church, and meal plan registration.
+- Click "Submit Registration."
+- Go to "Finance" → "Current Charges."
+
+Click to access the Current Charges page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=33:0
+- Click "Go" to see the total amount.
+- Click "Make Payments" → "eTranzact."
+- Pay the stated amount for the semester.`
+          },
+          {
+            question: "Q18: Can I view my payment history on the portal?",
+            answer: `A:
+- Go to "Finance."
+- Click "Current Charges."
+
+Click to access the Current Charges page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=33:0
+- Select "Completed Charges."
+
+Click to access the Completed Charges page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=33:0:2&data=514388`
+          },
+          {
+            question: "Q19: What should I do if my payment is not reflecting on UMIS?",
+            answer: `A:
+- Contact the Bursary Department for assistance.`
+          },
+          {
+            question: "Q20: How do I generate my school fees invoice?",
+            answer: `A:
+- Click on "Finance."
+- Go to "Current Charges."
+
+Click to access the Current Charges page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=33:0
+- Click "Receipt."
+
+Click to access the Receipt page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=33:0`
+          },
+          {
+            question: "Q21: Can I pay my tuition fees in installments?",
+            answer: `A:
+- I’m not sure. Please contact the Bursary Department for clarification.`
+          },
+          {
+            question: "Q22: How do I print my course form?",
+            answer: `A:
+- Go to "Finance."
+- Click "Print Course Form."
+
+Click to access the Print Course Form page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=50:0
+- Download and print the document.`
+          },
+          {
+            question: "Q23: How do I register for a previous semester?",
+            answer: `A:
+- Click on "Finance."
+- Select "Register Previous Semester."
+
+Click to access the Register Previous Semester page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=44:0
+- Follow the instructions to complete registration.`
+          },
+          {
+            question: "Q24: How do I print previous course form?",
+            answer: `A:
+- Go to "Finance."
+- Click "Print Course Form."
+
+Click to access the Print Course Form page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=50:0
+- Then click on previous course form:
+
+Click to access the Previous Course Form page: https://umis.babcock.edu.ng/babcock/a_students.jsp?view=50:1&data=
+- Download and print the document.`
+          }
+        ];
+        // Initialize the UI components
+        this.setupUI();
+      }
+
+      setupUI() {
+        this.cacheElements();
+        this.initEventListeners();
+        this.populateSidebar();
+        this.initAutoResize();
+        this.displayWelcomeMessage();
+      }
+
+      cacheElements() {
+        this.elements = {
+          sidebar: document.querySelector('.sidebar'),
+          chatMessages: document.querySelector('.chat-messages'),
+          userInput: document.getElementById('user-input'),
+          sendButton: document.getElementById('send-btn'),
+          typingIndicator: document.querySelector('.typing-indicator'),
+          faqList: document.querySelector('.faq-list'),
+          hamburger: document.querySelector('.hamburger'),
+          closeButton: document.querySelector('.close-btn')
+        };
+      }
+
+      initEventListeners() {
+        // Send button click event
+        this.elements.sendButton.addEventListener('click', () => this.handleSend());
+        // Allow sending message by pressing Enter (without Shift)
+        this.elements.userInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.handleSend();
+          }
+        });
+        // Hamburger Menu Toggle (Mobile)
+        if (this.elements.hamburger) {
+          this.elements.hamburger.addEventListener('click', () => {
+            this.toggleSidebar();
+          });
+        }
+        // Close Sidebar Button (For Mobile)
+        if (this.elements.closeButton) {
+          this.elements.closeButton.addEventListener('click', () => {
+            this.elements.sidebar.classList.remove('active');
+          });
+        }
+      }
+
+      toggleSidebar() {
+        if (this.elements.sidebar) {
+          this.elements.sidebar.classList.toggle('active');
+        }
+      }
+
+      displayWelcomeMessage() {
+        const welcomeMessage = "Hello! Welcome to our chatbot. How can we assist you today?";
+        this.addMessage(welcomeMessage, 'bot');
+      }
+
+      async handleSend() {
+        const message = this.elements.userInput.value.trim();
+        if (!message) return;
+
+        this.addMessage(message, 'user');
+        this.elements.userInput.value = '';
+        this.showTypingIndicator();
+
+        try {
+          console.log("📩 Sending request to backend:", message);
+          // Ensure the endpoint matches your Flask route
+          const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          });
+          if (!response.ok) throw new Error('API Error');
+          const data = await response.json();
+          console.log("✅ Response received:", data);
+          this.addMessage(data.response, 'bot');
+        } catch (error) {
+          console.error("❌ Error:", error);
+          this.showError('Failed to get response. Please try again.');
+        } finally {
+          this.hideTypingIndicator();
+        }
+      }
+
+      addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        messageDiv.innerHTML = `
+          <div class="message-inner">
+            <div class="avatar">
+              <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+            </div>
+            <div class="message-content">
+              ${this.formatMessageContent(content)}
+              <span class="timestamp">${timestamp}</span>
+            </div>
+          </div>
+        `;
+        this.elements.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+      }
+
+      formatMessageContent(text) {
+        // Convert URLs to clickable links
+        return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+      }
+
+      showTypingIndicator() {
+        this.elements.typingIndicator.style.display = 'flex';
+        this.scrollToBottom();
+      }
+
+      hideTypingIndicator() {
+        this.elements.typingIndicator.style.display = 'none';
+      }
+
+      scrollToBottom() {
+        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+      }
+
+      showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'message error-message';
+        errorDiv.textContent = message;
+        this.elements.chatMessages.appendChild(errorDiv);
+        this.scrollToBottom();
+      }
+
+      initAutoResize() {
+        const textarea = this.elements.userInput;
+        textarea.addEventListener('input', () => {
+          textarea.style.height = 'auto';
+          textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
+        });
+        this.elements.sendButton.addEventListener('click', () => {
+          textarea.style.height = 'auto';
+        });
+      }
+
+      populateSidebar() {
+        // Populate the sidebar with FAQ items
+        this.faqs.forEach(faq => {
+          const li = document.createElement('li');
+          li.textContent = faq.question;
+          li.addEventListener('click', () => {
+            this.addMessage(`<strong>${faq.question}</strong><br>${faq.answer}`, 'bot');
+            if (window.innerWidth <= 768) {
+              this.elements.sidebar.classList.remove('active');
+            }
+          });
+          this.elements.faqList.appendChild(li);
+        });
+      }
+    }
+
+    // Initialize ChatUI when the DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("DOM fully loaded. Initializing ChatUI...");
+      new ChatUI();
+    });
+  </script>
+</body>
+</html>

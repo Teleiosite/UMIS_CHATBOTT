@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Ensure proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='BabcockLogo/BU_logo.png') }}">
+  <title>Edit FAQ - UMIS Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      background: #EBEDEF;
+      color: #004282;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    /* Use a fluid container that shrinks on smaller screens */
+    .edit-container {
+      max-width: 600px;
+      width: 90%;
+      margin: 50px auto;
+      padding: 20px;
+      background: #FFFFFF;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0, 66, 130, 0.15);
+    }
+    .edit-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    .edit-container form {
+      display: flex;
+      flex-direction: column;
+    }
+    .edit-container label {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .edit-container input,
+    .edit-container textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #004282;
+      border-radius: 3px;
+      font-size: 1rem;
+    }
+    .edit-container button {
+      padding: 10px 20px;
+      background: #004282;
+      border: none;
+      border-radius: 3px;
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease;
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+    .edit-container button:hover {
+      background: #FFFFFF;
+      color: #004282;
+      border: 1px solid #004282;
+    }
+    .edit-container p {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+    .edit-container a {
+      color: #004282;
+      text-decoration: none;
+    }
+    .edit-container a:hover {
+      text-decoration: underline;
+    }
+    /* Mobile-specific adjustments */
+    @media (max-width: 480px) {
+      .edit-container {
+        margin: 20px auto;
+        padding: 15px;
+      }
+      .edit-container h2 {
+        font-size: 1.5rem;
+      }
+      .edit-container label,
+      .edit-container input,
+      .edit-container textarea,
+      .edit-container button,
+      .edit-container p {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="edit-container">
+    <h2>Edit FAQ</h2>
+    <form method="post">
+      <label>Question:</label>
+      <input type="text" name="question" value="{{ faq.question }}" required>
+      <label>Alternate Questions (comma separated or JSON array):</label>
+      <textarea name="alternate_questions" required>{{ faq.alternate_questions }}</textarea>
+      <label>Answer:</label>
+      <textarea name="answer" required>{{ faq.answer }}</textarea>
+      <button type="submit">Update FAQ</button>
+    </form>
+    <p><a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a></p>
+  </div>
+</body>
+</html>
